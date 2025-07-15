@@ -16,7 +16,7 @@ pip install -r ../extra_requirements.txt
 To run it:
 
 ```shell
-python train.py hyperparams/sepformer.yaml --data_folder yourpath/data
+python train.py hyperparams/xxx.yaml --data_folder yourpath/data
 ```
 Note that during training we print the negative SI-SNR (as we treat this value as the loss).
 
@@ -33,7 +33,7 @@ python train.py hyperparams/sepformer.yaml --data_folder yourpath/data --test_on
 
 # Dynamic Mixing:
 
-* This recipe supports dynamic mixing where the training data is dynamically created in order to obtain new utterance combinations during training. For this you need to have the WSJ0 dataset (available though LDC at `https://catalog.ldc.upenn.edu/LDC93S6A`).
+* This recipe supports dynamic mixing where the training data is dynamically created in order to obtain new utterance combinations during training.
 
 
 
@@ -42,7 +42,7 @@ python train.py hyperparams/sepformer.yaml --data_folder yourpath/data --test_on
 You can run the following command to train the model using Distributed Data Parallel (DDP) with 2 GPUs:
 
 ```bash
-torchrun --nproc_per_node=2 train.py hparams/sepformer.yaml --data_folder yourpath/data
+torchrun --nproc_per_node=2 train.py hparams/xxx.yaml --data_folder yourpath/data
 ```
 You can add the other runtime options as appropriate. For more complete information on multi-GPU usage, take a look at [our documentation](https://speechbrain.readthedocs.io/en/latest/multigpu.html).
 
