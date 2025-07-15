@@ -336,16 +336,16 @@ class Separation(sb.Brain):
                         "snt_id": snt_id[0],
                         "sdr": sdr.mean(),
                         "sdr_i": sdr_i,
-                        "si-snr": -sisnr.item(),
-                        "si-snr_i": -sisnr_i.item(),
+                        "si-snr": -sisnr.mean().item(),
+                        "si-snr_i": -sisnr_i.mean().item(),
                     }
                     writer.writerow(row)
 
                     # Metric Accumulation
                     all_sdrs.append(sdr.mean())
                     all_sdrs_i.append(sdr_i.mean())
-                    all_sisnrs.append(-sisnr.item())
-                    all_sisnrs_i.append(-sisnr_i.item())
+                    all_sisnrs.append(-sisnr.mean().item())
+                    all_sisnrs_i.append(-sisnr_i.mean().item())
 
                 row = {
                     "snt_id": "avg",
