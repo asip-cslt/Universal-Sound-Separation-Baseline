@@ -263,7 +263,7 @@ class Separation(sb.Brain):
 
     def save_results(self, test_data):
         """This script computes the SDR and SI-SNR metrics and saves
-        them into a csv file"""
+        them into a csv file ( out-of-order save ) """
 
         # This package is required for SDR computation
         from mir_eval.separation import bss_eval_sources

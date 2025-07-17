@@ -56,6 +56,34 @@ cd Conv-Tasnet/separation/
 OMP_NUM_THREADS=4 python train.py hparams/convtasnet_4mix.yaml --test_only
 ```
 
+# Separation (of real data)
+
+Edit hparams/convtasnet_4mix.yaml
+```yaml
+# ---------------------------------- Paths ----------------------------------
+test_data: ../data/test_mixtures.csv        # point to your CSV list (Containing ID & mix_wav col)
+
+pretrained_separator: !new:speechbrain.utils.parameter_transfer.Pretrainer
+    collect_in: !ref <save_folder>
+    loadables:
+        encoder: !ref <Encoder>
+        decoder: !ref <Decoder>
+        masknet: !ref <MaskNet>
+    paths:                                      # <-  update all three paths
+        encoder: results/convtasnet_4-mix/1234/yourckpt/encoder.ckpt
+        decoder: results/convtasnet_4-mix/1234/yourckpt/decoder.ckpt
+        masknet: results/convtasnet_4-mix/1234/yourckpt/masknet.ckpt
+
+# --------------------------------- Options ---------------------------------
+save_audio: True                               # save separated sources
+```
+then proceed to the separation step:
+
+```shell
+cd Conv-Tasnet/separation/
+OMP_NUM_THREADS=4 python infer.py hparams/convtasnet_4mix.yaml --test_only
+```
+
 # Pretrained Model
 
 For a quick test, you can download our pretrained model from Hugging Face and place it under `Conv-Tasnet/separation/results`. The SI-SDR result on the validation set with the pretrained model is 1.19 db
