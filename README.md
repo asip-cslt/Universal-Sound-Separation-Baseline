@@ -58,7 +58,7 @@ OMP_NUM_THREADS=4 python train.py hparams/convtasnet_4mix.yaml --test_only
 
 # Separation (of real data)
 
-Edit hparams/convtasnet_4mix.yaml
+Edit `hparams/convtasnet_4mix.yaml`
 ```yaml
 # ---------------------------------- Paths ----------------------------------
 test_data: ../data/test_mixtures.csv        # point to your CSV list (Containing ID & mix_wav col)
@@ -83,6 +83,8 @@ then proceed to the separation step:
 cd Conv-Tasnet/separation/
 OMP_NUM_THREADS=4 python extract.py hparams/convtasnet_4mix.yaml --test_only
 ```
+
+The audio will be saved in `yourlog/save/audio_results`.
 
 # Pretrained Model
 

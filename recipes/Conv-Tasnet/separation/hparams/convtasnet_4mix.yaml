@@ -17,7 +17,7 @@ train_log: !ref <output_folder>/train_log.txt
 save_folder: !ref <output_folder>/save
 train_data: !ref ../data/baseline_train_data.csv
 valid_data: !ref ../data/baseline_valid_data.csv
-test_data: !ref ../data/baseline_valid_data.csv
+test_data: !ref /home/youzhenghai/github/archieve/baseline_valid_data.csv
 skip_prep: False
 
 
