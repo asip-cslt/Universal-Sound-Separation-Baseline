@@ -81,7 +81,7 @@ then proceed to the separation step:
 
 ```shell
 cd Conv-Tasnet/separation/
-OMP_NUM_THREADS=4 python infer.py hparams/convtasnet_4mix.yaml --test_only
+OMP_NUM_THREADS=4 python extract.py hparams/convtasnet_4mix.yaml --test_only
 ```
 
 # Pretrained Model
