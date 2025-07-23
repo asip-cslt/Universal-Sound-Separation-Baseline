@@ -16,6 +16,11 @@ import speechbrain.nnet.schedulers as schedulers
 from speechbrain.utils.distributed import run_on_main
 from speechbrain.utils.logger import get_logger
 
+def _ensure_header(csv_path, header):
+    if not os.path.isfile(csv_path):
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=header)
+            writer.writeheader()
 
 # Define training procedure
 class Separation(sb.Brain):
@@ -361,43 +366,105 @@ class Separation(sb.Brain):
         logger.info("Mean SDR is {}".format(np.array(all_sdrs).mean()))
         logger.info("Mean SDRi is {}".format(np.array(all_sdrs_i).mean()))
 
+
+
+
     def save_audio(self, snt_id, mixture, targets, predictions):
-        "saves the test audio (mixture, targets, and estimated sources) on disk"
+        "saves the test audio (mixture, targets, and estimated sources) on disk AND writes two csvs."
+        # # 只主进程写文件
+        # if not is_main_process():
+        #     return
 
-        # Create output folder
         save_path = os.path.join(self.hparams.save_folder, "audio_results")
-        if not os.path.exists(save_path):
-            os.mkdir(save_path)
+        os.makedirs(save_path, exist_ok=True)
 
+        sr = self.hparams.sample_rate
+
+        # 先保存混音
+        mix_sig = mixture[0][0, :]
+        mix_sig = mix_sig / mix_sig.abs().max()
+        mix_path = os.path.join(save_path, f"item{snt_id}_mix.wav")
+        torchaudio.save(mix_path, mix_sig.unsqueeze(0).cpu(), sr)
+        duration = mix_sig.numel() / sr
+
+        # 下面保持你原来的 for 循环逻辑，只是多记录一下路径
+        tgt_paths = []
+        est_paths = []
         for ns in range(self.hparams.num_spks):
             # Estimated source
             signal = predictions[0, :, ns]
             signal = signal / signal.abs().max()
-            save_file = os.path.join(
-                save_path, "item{}_source{}hat.wav".format(snt_id, ns + 1)
-            )
-            torchaudio.save(
-                save_file, signal.unsqueeze(0).cpu(), self.hparams.sample_rate
-            )
+            est_file = os.path.join(save_path, f"item{snt_id}_source{ns+1}hat.wav")
+            torchaudio.save(est_file, signal.unsqueeze(0).cpu(), sr)
+            est_paths.append(est_file)
 
             # Original source
             signal = targets[0, :, ns]
             signal = signal / signal.abs().max()
-            save_file = os.path.join(
-                save_path, "item{}_source{}.wav".format(snt_id, ns + 1)
-            )
-            torchaudio.save(
-                save_file, signal.unsqueeze(0).cpu(), self.hparams.sample_rate
-            )
+            tgt_file = os.path.join(save_path, f"item{snt_id}_source{ns+1}.wav")
+            torchaudio.save(tgt_file, signal.unsqueeze(0).cpu(), sr)
+            tgt_paths.append(tgt_file)
 
-        # Mixture
-        signal = mixture[0][0, :]
-        signal = signal / signal.abs().max()
-        save_file = os.path.join(save_path, "item{}_mix.wav".format(snt_id))
-        torchaudio.save(
-            save_file, signal.unsqueeze(0).cpu(), self.hparams.sample_rate
-        )
+        # ===== 写 CSV =====
+        # 表头（固定为4列，少于4个speaker时留空）
+        tgt_header = [
+            "ID","duration",
+            "mix_wav","mix_wav_format","mix_wav_opts",
+            "s1_wav","s1_wav_format","s1_wav_opts",
+            "s2_wav","s2_wav_format","s2_wav_opts",
+            "s3_wav","s3_wav_format","s3_wav_opts",
+            "s4_wav","s4_wav_format","s4_wav_opts",
+        ]
+        est_header = [
+            "ID","duration",
+            "mix_wav","mix_wav_format","mix_wav_opts",
+            "est1_wav","est1_wav_format","est1_wav_opts",
+            "est2_wav","est2_wav_format","est2_wav_opts",
+            "est3_wav","est3_wav_format","est3_wav_opts",
+            "est4_wav","est4_wav_format","est4_wav_opts",
+        ]
 
+        tgt_csv = os.path.join(self.hparams.save_folder, "targets.csv")
+        est_csv = os.path.join(self.hparams.save_folder, "estimates.csv")
+        _ensure_header(tgt_csv, tgt_header)
+        _ensure_header(est_csv, est_header)
+
+        def fill_rows(paths, prefix):
+            row = {}
+            for i in range(4):
+                key = f"{prefix}{i+1}_wav"
+                if i < len(paths):
+                    row[key] = paths[i]
+                    row[f"{key}_format"] = "wav"
+                    row[f"{key}_opts"] = ""
+                else:
+                    row[key] = ""
+                    row[f"{key}_format"] = ""
+                    row[f"{key}_opts"] = ""
+            return row
+
+        tgt_row = {
+            "ID": snt_id,
+            "duration": duration,
+            "mix_wav": mix_path,
+            "mix_wav_format": "wav",
+            "mix_wav_opts": "",
+        }
+        tgt_row.update(fill_rows(tgt_paths, "s"))
+
+        est_row = {
+            "ID": snt_id,
+            "duration": duration,
+            "mix_wav": mix_path,
+            "mix_wav_format": "wav",
+            "mix_wav_opts": "",
+        }
+        est_row.update(fill_rows(est_paths, "est"))
+
+        with open(tgt_csv, "a", newline="", encoding="utf-8") as f:
+            csv.DictWriter(f, fieldnames=tgt_header).writerow(tgt_row)
+        with open(est_csv, "a", newline="", encoding="utf-8") as f:
+            csv.DictWriter(f, fieldnames=est_header).writerow(est_row)
 
 def dataio_prep(hparams):
     """Creates data processing pipeline"""
