@@ -10,7 +10,7 @@ The task is divided into two phases:
 1. **Simulation Test**  
    - The mixed signal is single-channel, created by combining clean speech and music sources with added reverberation.  
    - SI-SDR is used as the evaluation metric.
-   - You can get the validation dataset from [here](https://huggingface.co/datasets/swc2/aatc2025sim)
+   - You can get the validation dataset from [here](https://huggingface.co/datasets/swc2/aatc2025sim2)
 
 2. **Real-world Test**  
    - Uses two-channel recordings of four sources played simultaneously by four loudspeakers.  
